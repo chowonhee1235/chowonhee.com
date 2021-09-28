@@ -1,331 +1,168 @@
-<!DOCTYPE html>
-<html lang="ko">
-
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>이미지콘 선택기</title>
-  <link rel="shortcut icon" href="favicon.ico">
-  <link rel="stylesheet" href="css/list.css" />
-</head>
-
-<body>
-  <div class="container">
-    <div class="headerbox">
-        <div class="top-menu">
-        <li>Twitch</li>
-        </div>
-      <div class="columns">
-        <div class="column hide-xs show col-md-1 col-2"></div>
-        <div class="column col-xs-12 col-md-10 col-8">
-          <div class="logo"><p>이미지콘 선택기</p></div>
-          <div class="input-group input-inline width100">
-            <span class="input-group-addon">~</span>
-            <div class="form-autocomplete width100">
-              <div class="form-autocomplete-input form-input has-icon-right">
-                <input class="form-input" id="search" type="text" placeholder="이모티콘 검색" />
-                <i class="form-icon icon icon-cross" id="search_clear"></i>
-              </div>
-              <ul class="menu hide" id="autocomplete"></ul>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="columns">
-        <div class="column hide-xs show col-md-1 col-2"></div>
-        <div class="column col-xs-12 col-md-10 col-8">
-          <div class="tags"></div>
-        </div>
-      </div>
-    </div>
-    <div class="intervalbox"></div>
-    <div class="itembox">
-      <div class="columns">
-        <div class="column hide-xs show col-lg-1 col-1"></div>
-        <div class="column col-xs-12 col-lg-10 col-10 columns dccon-list"></div>
-      </div>
-    </div>
-    <div class="toast-container"></div>
-
-  </div>
-	<script type="text/javascript">
-		var stl = null;
-
-		var resize = function() {
-			if (stl!=null) { stl.remove(); }
-			stl = document.createElement("style");
-
-			var width = document.body.getElementsByClassName("dccon-list")[0].scrollWidth;
-			if (width < 800)
-			{
-				if (width < 600)
-				{
-					if (width < 500)
-					{
-						if (width < 400)
-						{
-							if (width < 300) { stl.innerText=".col-15{width:50%;}" }
-							else { stl.innerText=".col-15{width:33%;}" }
-						}
-						else { stl.innerText=".col-15{width:25%;}" }
-					}
-					else { stl.innerText=".col-15{width:20%;}" }
-				}
-				else { stl.innerText=".col-15{width:16%;}" }
-			}
-			else { stl.innerText=".col-15{width:12.5%;}" }
-
-			document.body.appendChild(stl);
-		};
-
-		window.addEventListener("resize", resize);
-		window.addEventListener("load", resize);
-	</script>
-  <div class="credit">
-      <div class="text">
-          <p>Original System by <a href="https://github.com/rishubil/jsassist-open-dccon">rishubil</a>, Edited by Ganke</p>
-      </div>
-  </div>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.lazy/1.7.5/jquery.lazy.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.lazy/1.7.5/jquery.lazy.plugins.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.7.1/clipboard.min.js"></script>
-  <script src="https://cdn.rawgit.com/teampopong/hangul-jamo-js/eaca39e7/hangul-jamo.js"></script> 
-  <script type="text/javascript">
-    var dcconList = [];
-
-    function getUrlParameter(sParam) {
-      var sPageURL = decodeURIComponent(window.location.search.substring(1)),
-        sURLVariables = sPageURL.split('&'),
-        sParameterName,
-        i;
-
-      for (i = 0; i < sURLVariables.length; i++) {
-        sParameterName = sURLVariables[i].split('=');
-
-        if (sParameterName[0] === sParam) {
-          return sParameterName[1] === undefined ? true : sParameterName[1];
+    <meta charset="utf-8"/>
+    <title>ChatAssistX</title>
+    <script>
+        // get parameter 가져옴
+        var url_string = window.location.href;
+        var url = new URL(url_string);
+        // ChatAssist 설정 변수
+        window.config = {};
+        
+        // 채널 아이디. 주소끝 ?preset=(프리셋아이디) 를 붙여 지정합니다.
+        // 강제지정은 url.searchParams.get("preset") 을 "프리셋명" 으로 바꾸면 됩니다.
+        window.config.preset = url.searchParams.get("preset");
+        
+        window.config.allowExternalSource = false; // 외부이미지([img 주소] 문법) 허용하려면 true로 변경
+        window.config.allowEmoticon = true; // 디시콘 사용가능유무 사용금지로 바꾸려면 false로 변경
+        window.config.ignoreMQEmoticon = true; // 마퀴태그+디시콘 사용여부 사용하려면 false로 변경
+        window.config.ignoreNickname = "nightbot,twipkr,yousa_bot" // 필터링할 닉네임 목록(,로 구분)
+        window.config.enableTwitchEmoticon = true; // 트위치 이모티콘 사용여부
+        window.config.TwitchEmoticonsize = "1.0"; //트위치 이모티콘 크기 1.0/2.0/3.0 처럼 입력
+        
+        // 1.6.1.0 추가 - 채널명 입력
+        // 기존 tapic은 더이상 사용하지 않습니다.
+        window.config.channelname = "funzinnu"
+        // 이모티콘
+        window.emoticon = {};
+        window.emoticon.address = "https://funzinnu.com/stream/dccon.js";
+        window.emoticon.isActive = false; // 이모티콘 목록 불러와졌는지 여부
+        window.emoticon.list = {}; // 이모티콘 목록
+        
+        // 스트리머 전용 명령어(~통계,~투표) 를 사용하기 위한 아이디 지정
+        // 플랫폼별 닉네임을 입력합니다
+        window.config.streamer = {
+            "twitch" : "Funzinnu",
+            "kakaopot" : "펀즈",
+            "youtube" : "Funzinnu"
         }
-      }
-    };
-
-    function init() {
-      var seletedTags = [];
-      var currentSearchText = "";
-      var dcconSearchMap = {}; // keyword로 dccon을 찾을 수 있도록 하는 맵
-      var dcconKeywordList = []; // 전체 keyword 리스트
-      var visibleDccon = {};
-      var autocompleteData = {};
-      var tags = [];
-      // dcconSearchMap, dcconKeywordList 초기화
-      for (var i = 0; i < dcconList.length; i++) {
-        var dccon = dcconList[i];
-        for (var j = 0; j < dccon.tags.length; j++) {
-          var tag = dccon.tags[j];
-          if (tags.indexOf(tag) == -1) {
-            tags.push(tag);
-          }
-        }
-        for (var j = 0; j < dccon.keywords.length; j++) {
-          var keyword = dccon.keywords[j];
-          dcconSearchMap[keyword] = dccon;
-          dcconKeywordList.push(keyword);
-          autocompleteData[keyword] = dccon.path;
-          $('div.dccon-list').append(
-/*            '<div class="dccon column col-xs-6 col-md-4 col-lg-3 col-xl-2 col-2 tooltip tooltip-bottom" data-keyword="'*/
-							'<div class="dccon column col-xs-6 col-md-4 col-lg-3 col-xl-2 col-15 tooltip tooltip-bottom" data-keyword="' + keyword + '" data-tags="' + dccon.tags.join(',') + '" data-clipboard-text="~' + keyword + '" data-tooltip="' + dccon.keywords
-            .join(', ') + '">' +
-            '  <div class="card">' +
-            '    <div class="card-image">' +
-						'      <img class="img-background" src="' + dccon.path + '">' +
-            '      <img class="img-responsive width100 lazy" data-src="' + dccon.path + '">' +
-            '    </div>' +
-/*            '    <div class="card-body">' +
-            keyword +
-            '    </div>' +
-*/            '  </div>' +
-            '</div>');
-          $('#autocomplete').append(
-            '<li class="menu-item">' +
-            '  <a href="#" class="autocomplete-item" data-keyword="' + keyword + '" data-clipboard-text="~' + keyword + '">' +
-            '    <div class="tile tile-centered">' +
-            '      <div class="tile-icon">' +
-            '        <img data-src="' + dccon.path + '" class="avatar avatar-sm lazy"/>' +
-            '      </div>' +
-            '      <div class="tile-content">' + keyword +
-            '      </div>' +
-            '    </div>' +
-            '  </a>' +
-            '</li>'
-          );
-        }
-      }
-
-      var lazyDccon = $(".dccon > .card > .card-image > img.lazy").Lazy({
-        chainable: false,
-        visibleOnly: true
-      });
-      var lazyAutocompletedIcon = $(".autocomplete-item > .tile > .tile-icon > img.lazy").Lazy({
-        chainable: false,
-        visibleOnly: true,
-        appendScroll: $('#autocomplete')
-      });
-
-      $('.autocomplete-item').click(function() {
-        currentSearchText = $(this).data('keyword');
-        $('input#search').val(currentSearchText);
-        updateList();
-        $('#autocomplete').addClass('hide');
-      });
-
-      tags.sort();
-      new Clipboard('.dccon, .autocomplete-item').on('success', function(e) {
-        var $toast = $('<div class="toast toast-primary">' +
-          '이모티콘 "' + e.text + '"을(를) 복사했습니다. 이제 채팅창에 입력하세요!' +
-          '</div>');
-        $toast.delay(3000).fadeOut('slow', function() {
-          $toast.remove();
-        });
-        $('.toast-container').append($toast);
-      });
-
-      for (var i = 0; i < tags.length; i++) {
-        var tag = tags[i];
-        $('div.tags').append('<label class="chip" id="tag-' + i + '" data-tag="' + tag + '">' +
-          tag +
-          '</label>');
-      }
-
-      $('div.tags>.chip').click(function(e) {
-        var $this = $(this);
-        var tag = $this.data('tag');
-        if ($this.hasClass('tag-selected')) {
-          $this.removeClass('tag-selected');
-          var index = seletedTags.indexOf(tag);
-          if (index >= 0) {
-            seletedTags.splice(index, 1);
-          }
-        } else {
-          $this.addClass('tag-selected');
-          seletedTags.push(tag);
-        }
-        updateList();
-      });
-
-      $('input#search').on("focusin", function(e) {
-        $('#autocomplete').removeClass('hide').scrollTop(0);
-        lazyAutocompletedIcon.update();
-      });
-
-      $('input#search').on("focusout", function(e) {
-        if (!$(e.relatedTarget).hasClass('autocomplete-item')) {
-          $('#autocomplete').addClass('hide');
-        }
-      });
-      $(document).keydown(
-        function(e) {
-          if (!$('#autocomplete').hasClass('hide')) {
-            var $focusedAutocompleteItem = $('.menu-item:not(".hide")>.autocomplete-item:focus');
-            if (e.keyCode == 40) { // down
-              e.preventDefault();
-              if ($focusedAutocompleteItem.length > 0) {
-                $focusedAutocompleteItem.parent().nextAll('.menu-item:not(".hide")').first().children().focus();
-              } else {
-                $('.menu-item:not(".hide")>.autocomplete-item').first().focus();
-              }
-            } else if (e.keyCode == 38) { // up
-              e.preventDefault();
-              if ($focusedAutocompleteItem.length > 0) {
-                $focusedAutocompleteItem.parent().prevAll('.menu-item:not(".hide")').first().children().focus();
-              }
-            } else if (e.keyCode == 27) { // esc
-              e.preventDefault();
-              $('#autocomplete').addClass('hide');
-            }
-          }
-        });
-
-      function updateList() {
-        visibleDccon = {};
-        $('.dccon').each(function() {
-          var $this = $(this);
-          var keyword = $this.data('keyword');
-          var tags = $this.data('tags').split(',');
-          var dccon = dcconSearchMap[keyword];
-          var searchResult = (function() {
-            if (seletedTags.length > 0) {
-              var hasTag = false;
-              for (var i = 0; i < tags.length; i++) {
-                if (seletedTags.indexOf(tags[i]) != -1) {
-                  hasTag = true;
-                  break;
-                }
-              }
-              if (!hasTag) {
-                return false;
-              }
-            }
-            if (currentSearchText.length > 0 && keyword.indexOf(currentSearchText) == -1) {
-              return false;
-            }
-            return true;
-          })();
-          if (searchResult && visibleDccon[dccon.keywords.join(",")] == undefined) {
-            visibleDccon[dccon.keywords.join(",")] = dccon;
-            $this.removeClass('hide');
-          } else {
-            $this.addClass('hide');
-          }
-        });
-
-        $('.autocomplete-item').each(function() {
-          var $this = $(this);
-          var keyword = $this.data('keyword');
-          if (HANGUL.indexOf(keyword, currentSearchText) != -1) {
-            $this.parent().removeClass('hide');
-          } else {
-            $this.parent().addClass('hide');
-          }
-        });
-        if ($('.menu-item:not(".hide")').length == 0) {
-          $('#autocomplete').addClass('hide');
-        } else if ($('input#search').is(":focus")) {
-          $('#autocomplete').removeClass('hide').scrollTop(0);;
-          lazyAutocompletedIcon.update();
-        }
-
-        lazyDccon.update();
-        lazyAutocompletedIcon.update();
-      }
-
-      $('input#search').on('input', function(e) {
-        currentSearchText = $('input#search').val();
-        updateList();
-      });
-      $('#search_clear').click(function() {
-        $('input#search').val('');
-        currentSearchText = '';
-        updateList();
-      });
-      updateList();
+        
+        // tapic 세팅
+        // JSAssist 없이 트위치 연동을 가능하게 합니다.
+        // http://chat.lastorder.xyz/getauth.html 에서 oauth을 발급후 사용 가능합니다.
+        // oauth 값은 주소끝에 ?preset=(프리셋아이디)&oauth=(oauth키) 를 붙여 입력할수 있습니다.
+        // 절대! 절대!! 절대!!! html파일에 직접 oauth 값을 입력하지 마세요. oauth 값이 유출된 경우 타 사용자가 oauth 값을 악용할 수 있습니다!(타 채널에 들어가 어그로, 설정 임의변경 등등등...)
+        // 장점: 트위치 이모티콘 리스트 업데이트 없이 계속 최신 이모티콘 사용가능!!!
+        window.tapic = {};
+        window.tapic.oauth = url.searchParams.get("oauth") === null ? "" : url.searchParams.get("oauth");
+        window.tapic.channelname = "funzinnu";
+        window.tapic.inited = false;
+        
+        // 기본값 입력처리
+        if(window.config.preset == null || window.config.preset == "") window.config.preset = "default";
+    </script>
+    <script src="https://cdn.jsdelivr.net/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-ui-dist@1.12.1/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.ui/1.11.4/jquery-ui.min.css">
+    <script src="https://cdn.jsdelivr.net/handlebarsjs/4.0.8/handlebars.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/Lastorder-DC/referrer-killer@84a087203af378c45782a406a58ad2d588ae36c2/referrer-killer.js"></script>
+    <script src="./js/chatassist.js?ver=20200227"></script>
+    <link rel="stylesheet" href="https://js-almighty.com/jsassist/web/css/styles.css" type="text/css" />
+    <link rel="stylesheet" href="https://chat.lastorder.xyz/css/chatassist.css">
+    <!-- 아래로 커스텀 CSS 추가 -->
+    <style type="text/css">
+    .chat_div .chat_text_nickname{
+        font-family: "Dotum", 돋움, Sans-Serif!important;
+        font-size: 12px!important;
+        background-color: #2f4343;
+        background-image: url("..//img/x_button_b.png");
+        border-top: #9fafaf solid 1px;
+        border-left: #9fafaf solid 1px;
+        border-bottom: #9fafaf solid 1px;
+        border-right: #9fafaf solid 1px;
+        display: block;
+        text-shadow: 0px 0px 0px #000000!important;
+        width: 210px;
+        text-align: center;
+        border-radius: 1px 1px 0px 0px;
+        box-shadow: 0px 0px 0px rgba(0,0,0,0)!important;
+        font-size: 0px!important;/**//**/
     }
-    $(document).ready(function() {
-      var dcconListUrl = getUrlParameter('dccon_list');
-      if (dcconListUrl == undefined) {
-        dcconListUrl = 'https://raw.githubusercontent.com/boutoron2685/open-dccon-custom-list/master/js/dccon_list.json';
-      }
-      $.getJSON(dcconListUrl).done(function(data) {
-          dcconList = data.dccons;
-          init();
-        })
-        .fail(function(jqxhr, textStatus, error) {
-          var err = textStatus + ", " + error;
-          console.log("Request Failed: " + err);
-          init();
-        });
-    });
-  </script>
+    .chat_div .chat_text_nickname:after{
+        content: "손님";
+        font-size: 12px!important;
+    }
+    .chat_div .chat_text_message{
+        font-family: "나눔고딕","nanumgothic", Sans-Serif!important;
+        font-size: 12.5!important;
+        color: #000000!important;
+        width: 200px!important;
+        text-shadow: 0px 0px 0px #000000!important;
+        background-color: #839797!important;
+        border-top: #9fafaf solid 1px;
+        border-left: #9fafaf solid 1px;
+        border-bottom: #9fafaf solid 1px;
+        border-right: #9fafaf solid 1px;
+        border-radius: 0px 0px 0px 0px;
+        margin-top: 0px;
+        margin-left: 0px;
+        box-shadow: 0px 0px 0px rgba(0,0,0,0)!important;
+        margin-bottom: 0px!important;
+        max-height: 95px;
+    }
+    .chat_div .chat_platform_tvpot,.chat_div  .chat_platform_twitch,.chat_div  .chat_platform_youtube,.chat_platform_info{
+        display: block!important;
+        position: relative!important;
+        width: 12px!important;
+        left: 198px!important;
+        bottom: -14px!important;
+    }
+    img{
+        max-width: 95px;
+        margin: 0 auto;
+        margin-top: 0px;
+        margin-bottom: 25px;
+        align-self: center;
+        display: block;
+        overflow: scroll;
+    }
+    .chat_text_nickname img{/*스트리머뱃지*/
+        display: inline;
+        height: 12px;
+        position: absolute;
+        left: 2px;
+        margin:0px;
+        margin-top: 1px;
+    }
+    .twitch_emoticon{/*트위치이모티콘*/
+       display: inline;
+        margin-right: -4px;
+        margin-bottom: 1px;
+    }
+    </style>
+</head>
+<body>
+<script id="chat-template" type="text/x-handlebars-template">
+    <div class="chat_div" id="chat_{{num}}">
+        <span class="chat_platform_{{platform}}"></span>
+        <span class="chat_text_nickname">
+            {{{nickname}}}
+        </span>
+        <div class="chat_text_message">
+            {{{message}}}
+        </div>
+    </div>
+</script>
+<script id="chat-template-sticky" type="text/x-handlebars-template">
+    <div class="fixed_chat">
+    {{#ifCond nickname notitle}}
+        <div class="chat_text_message_sticky_logo">
+            {{{message}}}
+        </div>
+    {{else}}
+        <span class="chat_platform_{{platform}}"></span>
+        <span class="chat_text_nickname">
+            {{{nickname}}}
+        </span>
+        <div class="chat_text_message_sticky">
+            {{{message}}}
+        </div>
+    {{/ifCond}}
+    </div>
+</script>
+<div class="chat_wrapper">
+    <div class="chat_container">
+    </div>
+</div>
 </body>
-
 </html>
